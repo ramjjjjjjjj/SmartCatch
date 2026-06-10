@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import FisherView from '../components/FisherView';
 import MarketView from '../components/MarketView';
 import InspectorView from '../components/InspectorView';
+import RestaurantView from '../components/RestaurantView';
 
 const ROLES = [
   { id: 'fisher', label: '🎣 Рыбак' },
   { id: 'market', label: '🏪 Рынок' },
   { id: 'inspector', label: '📊 Инспектор' },
+  { id: 'restaurant', label: '🍽️ Ресторан' },
 ];
 
 export default function App() {
@@ -48,6 +50,7 @@ export default function App() {
       {role === 'fisher' && <FisherView isOnline={isOnline} />}
       {role === 'market' && <MarketView />}
       {role === 'inspector' && <InspectorView />}
+      {role === 'restaurant' && <RestaurantView />}
     </div>
   );
 }

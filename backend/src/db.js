@@ -32,6 +32,16 @@ async function initDB() {
       ('Сазан', 3200, 8000),
       ('Вобла', 12400, 20000)
     ON CONFLICT (fish_type) DO NOTHING;
+    CREATE TABLE IF NOT EXISTS orders (
+      id SERIAL PRIMARY KEY,
+      catch_id INTEGER REFERENCES catches(id),
+      restaurant_name TEXT NOT NULL,
+      restaurant_contact TEXT,
+      quantity_kg NUMERIC,
+      message TEXT,
+      status TEXT DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT NOW()
+    );
   `);
   console.log('✅ Database initialized');
 }
