@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { isFishRecognitionAvailable, fileToBase64, compressImage, recognizeFish } from '../services/fishRecognition';
 
 const CARD = {
@@ -12,9 +12,11 @@ const CARD = {
 export default function FishPhotoCapture({ selectedFish, onPhotoVerified, onVerificationCleared }) {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const [processing, setProcessing] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [aiResult, setAiResult] = useState(null);
+  const [photoBase64, setPhotoBase64] = useState('');
+  const [photoMimeType, setPhotoMimeType] = useState('image/jpeg');
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -22,62 +24,46 @@ export default function FishPhotoCapture({ selectedFish, onPhotoVerified, onVeri
 
   const handleFile = async (file) => {
     if (!file) return;
-    setError(null);
-    setResult(null);
+    setConfirmed(false);
 
     const previewUrl = URL.createObjectURL(file);
     setPhotoFile(file);
     setPhotoPreview(previewUrl);
 
-    setAnalyzing(true);
+    setProcessing(true);
     try {
       const compressed = await compressImage(file, 800, 0.7);
       const { base64, mimeType } = await fileToBase64(compressed);
-      const aiResult = await recognizeFish(base64, mimeType, selectedFish.name);
-      setResult(aiResult);
-
-      if (aiResult.match) {
-        onPhotoVerified({
-          photoBase64: base64,
-          photoMimeType: mimeType,
-          aiVerified: true,
-          aiConfidence: aiResult.confidence,
-        });
-      } else {
-        onVerificationCleared();
-      }
+      setPhotoBase64(base64);
+      setPhotoMimeType(mimeType);
     } catch (e) {
-      setError('Ошибка AI анализа: ' + e.message);
-      onVerificationCleared();
+      console.warn('Photo processing failed:', e);
     } finally {
-      setAnalyzing(false);
+      setProcessing(false);
     }
   };
 
-  const skipAiAndProceed = async () => {
-    setError(null);
-    setAnalyzing(true);
-    try {
-      const compressed = await compressImage(photoFile, 800, 0.7);
-      const { base64, mimeType } = await fileToBase64(compressed);
-      setResult({
-        match: true,
-        species: selectedFish.name,
-        confidence: 0,
-        explanation: 'Подтверждено рыбаком вручную (AI недоступен)',
-      });
-      onPhotoVerified({
-        photoBase64: base64,
-        photoMimeType: mimeType,
-        aiVerified: false,
-        aiConfidence: 0,
-      });
-    } catch (e) {
-      setError('Ошибка: ' + e.message);
-    } finally {
-      setAnalyzing(false);
-    }
-  };
+  const handleConfirm = async () => {
+  setProcessing(true);
+  try {
+    const result = await recognizeFish(photoBase64, photoMimeType, selectedFish.name);
+    setConfirmed(true);
+    setAiResult(result); 
+    onPhotoVerified({
+      photoBase64,
+      photoMimeType,
+      aiVerified: result.match,
+      aiConfidence: result.confidence,
+      aiSpecies: result.species,
+      aiExplanation: result.explanation,
+    });
+  } catch (e) {
+    setConfirmed(true);
+    onPhotoVerified({ photoBase64, photoMimeType, aiVerified: false, aiConfidence: 0 });
+  } finally {
+    setProcessing(false);
+  }
+};
 
   const handleCameraClick = () => {
     cameraInputRef.current?.click();
@@ -91,8 +77,8 @@ export default function FishPhotoCapture({ selectedFish, onPhotoVerified, onVeri
     if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhotoFile(null);
     setPhotoPreview(null);
-    setResult(null);
-    setError(null);
+    setConfirmed(false);
+    setPhotoBase64('');
     onVerificationCleared();
   };
 
@@ -101,7 +87,7 @@ export default function FishPhotoCapture({ selectedFish, onPhotoVerified, onVeri
   return (
     <div style={{ marginBottom: 16 }}>
       <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8, display: 'block' }}>
-        📸 Фото улова (AI верификация)
+        📸 Фото улова
       </label>
 
       <input
@@ -188,7 +174,7 @@ export default function FishPhotoCapture({ selectedFish, onPhotoVerified, onVeri
             </motion.button>
           </div>
 
-          {analyzing && (
+          {processing && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '8px 12px',
@@ -206,98 +192,55 @@ export default function FishPhotoCapture({ selectedFish, onPhotoVerified, onVeri
                   borderRadius: '50%',
                 }}
               />
-              <span>AI анализирует фото: определение {selectedFish.name}...</span>
+              <span>Обработка фото...</span>
             </div>
           )}
 
-          {error && !analyzing && (
-            <div style={{
-              padding: '10px 12px',
-              background: 'rgba(255,80,80,0.08)',
-              borderRadius: 10,
-              fontSize: 12, color: '#FF5050',
-            }}>
-              <div style={{ marginBottom: 8 }}>⚠️ {error}</div>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={skipAiAndProceed}
-                style={{
-                  width: '100%', padding: '8px',
-                  background: 'rgba(255,149,0,0.15)',
-                  border: '1px solid rgba(255,149,0,0.25)',
-                  borderRadius: 8, color: '#FF9500',
-                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                }}
-              >
-                👤 Подтвердить вручную
-              </motion.button>
-            </div>
+          {!processing && !confirmed && (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleConfirm}
+              style={{
+                width: '100%', padding: '12px',
+                background: 'linear-gradient(135deg, #00D4AA, #0078FF)',
+                border: 'none', borderRadius: 12,
+                color: '#fff', fontSize: 14, fontWeight: 600,
+                cursor: 'pointer',
+                boxShadow: '0 4px 20px rgba(0,212,170,0.2)',
+              }}
+            >
+              ✅ Подтвердить — это {selectedFish.icon} {selectedFish.name}
+            </motion.button>
           )}
 
-          {result && !analyzing && (
+          {!processing && confirmed && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               style={{
-                padding: '10px 12px',
+                padding: '10px 14px',
                 borderRadius: 10,
-                background: result.match ? 'rgba(0,212,170,0.08)' : 'rgba(255,149,0,0.08)',
-                border: `1px solid ${result.match ? 'rgba(0,212,170,0.2)' : 'rgba(255,149,0,0.2)'}`,
+                background: aiResult?.match ? 'rgba(0,212,170,0.08)' : 'rgba(255,80,80,0.08)',
+                border: `1px solid ${aiResult?.match ? 'rgba(0,212,170,0.2)' : 'rgba(255,80,80,0.2)'}`,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 400 }}
-                  style={{ fontSize: 18 }}
-                >
-                  {result.match ? '✅' : '❌'}
-                </motion.span>
-                <span style={{
-                  fontSize: 13, fontWeight: 600,
-                  color: result.match ? '#00D4AA' : '#FF9500',
-                }}>
-                  {result.match
-                    ? `${selectedFish.icon} ${selectedFish.name} — подтверждено`
-                    : 'Вид не совпадает'}
-                </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 18 }}>{aiResult?.match ? '✅' : '⚠️'}</span>
+                <div style={{ fontSize: 13, fontWeight: 600, color: aiResult?.match ? '#00D4AA' : '#FF6B6B' }}>
+                  {aiResult?.match
+                    ? `${selectedFish.icon} ${selectedFish.name} — ИИ подтвердил`
+                    : `⚠️ ИИ определил: ${aiResult?.species || 'неизвестно'}`}
+                </div>
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>
-                {result.species && (
-                  <span>AI определил: <b style={{ color: 'rgba(255,255,255,0.7)' }}>{result.species}</b></span>
-                )}
-                {result.confidence > 0 && (
-                  <span>
-                    {result.species ? ' · ' : ''}
-                    Уверенность: {Math.round(result.confidence * 100)}%
-                  </span>
-                )}
-              </div>
-              {result.explanation && (
-                <div style={{
-                  fontSize: 11, color: 'rgba(255,255,255,0.4)',
-                  marginTop: 6, fontStyle: 'italic',
-                  borderTop: '1px solid rgba(255,255,255,0.06)',
-                  paddingTop: 6,
-                }}>
-                  {result.explanation}
+              {aiResult?.explanation && (
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
+                  🤖 {aiResult.explanation}
                 </div>
               )}
-              {!result.match && (
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleGalleryClick}
-                  style={{
-                    marginTop: 8, padding: '6px 14px',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 8, color: 'rgba(255,255,255,0.5)',
-                    fontSize: 11, cursor: 'pointer',
-                  }}
-                >
-                  🔄 Попробовать другое фото
-                </motion.button>
+              {aiResult?.confidence > 0 && (
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+                  Уверенность: {Math.round(aiResult.confidence * 100)}%
+                </div>
               )}
             </motion.div>
           )}
@@ -306,7 +249,7 @@ export default function FishPhotoCapture({ selectedFish, onPhotoVerified, onVeri
 
       {!photoPreview && (
         <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 6, textAlign: 'center' }}>
-          Сфотографируйте улов для AI-верификации вида рыбы
+          Сфотографируйте улов для верификации. Фото проверит инспектор.
         </div>
       )}
     </div>

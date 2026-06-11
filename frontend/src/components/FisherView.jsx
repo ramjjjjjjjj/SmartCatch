@@ -319,7 +319,7 @@ export default function FisherView({ isOnline }) {
             boxShadow: aiVerificationPassed ? '0 4px 20px rgba(0,212,170,0.2)' : 'none',
           }}
         >
-          {aiVerificationPassed ? '+ Зафиксировать улов' : '📸 Требуется AI верификация фото'}
+          {aiVerificationPassed ? '+ Зафиксировать улов' : '📸 Сделайте фото улова'}
         </motion.button>
       </motion.div>
 

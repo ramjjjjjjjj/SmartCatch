@@ -19,9 +19,11 @@ export default function InspectorView() {
   const [catches, setCatches] = useState([]);
   const [quotas, setQuotas] = useState([]);
   const [liveBoats, setLiveBoats] = useState([]);
+  const [mapLayer, setMapLayer] = useState('map'); // 'map' or 'satellite'
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef({});
+  const tileLayerRef = useRef(null);
 
   // Загрузка уловов и квот
   useEffect(() => {
@@ -51,12 +53,13 @@ export default function InspectorView() {
 
       const map = L.map(mapRef.current, { zoomControl: false }).setView([43.65, 51.17], 8);
 
-      // Тёмный тайл
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap © CARTO',
+      // Светлый тайл (Google Maps / 2GIS стиль)
+      tileLayerRef.current = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
       }).addTo(map);
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
+      L.control.scale({ position: 'bottomleft', metric: true, imperial: false }).addTo(map);
       mapInstanceRef.current = map;
     });
   }, []);
@@ -114,9 +117,9 @@ export default function InspectorView() {
         const popup = `
           <div style="font-family:Inter,sans-serif; min-width:160px;">
             <div style="font-weight:600; font-size:13px; margin-bottom:4px;">${boat.icon || '🎣'} ${boat.name || 'Рыбак'}</div>
-            <div style="font-size:12px; color:#666;">🚢 ${boat.boat}</div>
-            <div style="font-size:12px; color:#666;">🐟 ${boat.fish} · ${boat.weight} кг</div>
-            <div style="font-size:11px; color:#aaa; margin-top:4px;">Обновлено: ${timeStr}</div>
+            <div style="font-size:12px; color:#555;">🚢 ${boat.boat}</div>
+            <div style="font-size:12px; color:#555;">🐟 ${boat.fish} · ${boat.weight} кг</div>
+            <div style="font-size:11px; color:#888; margin-top:4px;">Обновлено: ${timeStr}</div>
           </div>
         `;
 
@@ -132,6 +135,28 @@ export default function InspectorView() {
       });
     });
   }, [liveBoats]);
+
+  // Переключение слоёв карты (карта / спутник)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !tileLayerRef.current) return;
+    import('leaflet').then(L => {
+      const map = mapInstanceRef.current;
+
+      // Remove current tile layer
+      map.removeLayer(tileLayerRef.current);
+
+      if (mapLayer === 'satellite') {
+        tileLayerRef.current = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          attribution: '&copy; Esri, Earthstar Geographics',
+          maxZoom: 19,
+        }).addTo(map);
+      } else {
+        tileLayerRef.current = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        }).addTo(map);
+      }
+    });
+  }, [mapLayer]);
 
   const totalKg = catches.reduce((s, c) => s + parseFloat(c.weight_kg || 0), 0);
   const chartData = quotas.map(q => ({
@@ -160,14 +185,15 @@ export default function InspectorView() {
           50% { box-shadow: 0 0 0 8px rgba(255,0,51,0); }
         }
         .leaflet-popup-content-wrapper {
-          background: #0D1F35 !important;
-          border: 1px solid rgba(0,212,170,0.2) !important;
+          background: #fff !important;
           border-radius: 12px !important;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
-          color: #fff !important;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.15) !important;
+          color: #1a1a2e !important;
+          padding: 4px !important;
         }
-        .leaflet-popup-tip { background: #0D1F35 !important; }
-        .leaflet-popup-close-button { color: rgba(255,255,255,0.4) !important; }
+        .leaflet-popup-content { margin: 10px 14px !important; }
+        .leaflet-popup-tip { background: #fff !important; }
+        .leaflet-popup-close-button { color: #999 !important; top: 6px !important; right: 6px !important; }
       `}</style>
 
       {/* Переключатель вида */}
@@ -237,17 +263,46 @@ export default function InspectorView() {
           <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>
             GPS карта флота
           </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#00D4AA' }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00D4AA', animation: 'pulse 2s infinite' }} />
-            Live
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Google Maps style Map/Satellite toggle */}
+            <div style={{
+              display: 'flex', gap: 2, padding: 2,
+              background: 'rgba(255,255,255,0.06)',
+              borderRadius: 8,
+            }}>
+              <button
+                onClick={() => setMapLayer('map')}
+                style={{
+                  padding: '4px 8px', border: 'none', borderRadius: 6,
+                  background: mapLayer === 'map' ? '#00D4AA' : 'transparent',
+                  color: mapLayer === 'map' ? '#050D1A' : 'rgba(255,255,255,0.4)',
+                  fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >Карта</button>
+              <button
+                onClick={() => setMapLayer('satellite')}
+                style={{
+                  padding: '4px 8px', border: 'none', borderRadius: 6,
+                  background: mapLayer === 'satellite' ? '#00D4AA' : 'transparent',
+                  color: mapLayer === 'satellite' ? '#050D1A' : 'rgba(255,255,255,0.4)',
+                  fontSize: 10, fontWeight: 600, cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >Спутник</button>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#00D4AA' }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#00D4AA', animation: 'pulse 2s infinite' }} />
+              Live
+            </div>
           </div>
         </div>
         <div
           ref={mapRef}
           style={{
             height: 260, borderRadius: 16, overflow: 'hidden',
-            border: '1px solid rgba(0,212,170,0.15)',
-            boxShadow: '0 0 30px rgba(0,212,170,0.05)',
+            border: '1px solid rgba(0,0,0,0.08)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
           }}
         />
         {liveBoats.length === 0 && (

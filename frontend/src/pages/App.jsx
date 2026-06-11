@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { createPortal } from 'react-dom';
+
+const DESKTOP_BREAKPOINT = 640;
 import { useAuth } from './AuthContext.jsx';
 import LoginPage from './LoginPage';
 import RegisterPage from './RegisterPage';
@@ -27,6 +30,114 @@ const pageVariants = {
   animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: 'easeOut' } },
   exit:    { opacity: 0, y: -16, transition: { duration: 0.15 } },
 };
+
+function PhoneFrame({ children }) {
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth > DESKTOP_BREAKPOINT);
+
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth > DESKTOP_BREAKPOINT);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  if (!isDesktop) return <>{children}</>;
+
+  return createPortal(
+    <div style={{
+      display: 'flex', justifyContent: 'center', alignItems: 'center',
+      minHeight: '100vh',
+      background: 'radial-gradient(ellipse at 50% 40%, #f0f4f8 0%, #e2e8f0 50%, #d6e0ed 100%)',
+      padding: 20,
+      position: 'fixed', inset: 0, zIndex: 9999,
+      overflow: 'hidden',
+    }}>
+      {/* Ambient glow */}
+      <div style={{
+        position: 'absolute', top: '50%', left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 600, height: 600,
+        background: 'radial-gradient(circle, rgba(0,212,170,0.04) 0%, transparent 60%)',
+        pointerEvents: 'none', borderRadius: '50%',
+      }} />
+
+      {/* Phone body */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.85, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          position: 'relative',
+          width: '100%', maxWidth: 393,
+          height: 'calc(100vh - 60px)',
+          maxHeight: 852,
+          background: '#050D1A',
+          borderRadius: 54,
+          border: '1px solid rgba(0,0,0,0.08)',
+          boxShadow: `
+            0 0 0 1px rgba(0,0,0,0.05),
+            0 30px 80px rgba(0,0,0,0.25),
+            0 0 40px rgba(0,0,0,0.05)
+          `,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Side buttons */}
+        <div style={{
+          position: 'absolute', right: -3, top: 140, width: 3, height: 55,
+          background: 'rgba(255,255,255,0.12)',
+          borderRadius: '0 2px 2px 0', zIndex: 300,
+        }} />
+        <div style={{
+          position: 'absolute', right: -3, top: 210, width: 3, height: 38,
+          background: 'rgba(255,255,255,0.12)',
+          borderRadius: '0 2px 2px 0', zIndex: 300,
+        }} />
+        <div style={{
+          position: 'absolute', left: -3, top: 175, width: 3, height: 45,
+          background: 'rgba(255,255,255,0.08)',
+          borderRadius: '2px 0 0 2px', zIndex: 300,
+        }} />
+
+        {/* Dynamic Island */}
+        <div style={{
+          position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+          width: 118, height: 34,
+          background: '#000',
+          borderRadius: 20,
+          zIndex: 200,
+          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
+          display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+          paddingRight: 14,
+        }}>
+          {/* Camera lens */}
+          <div style={{
+            width: 9, height: 9, borderRadius: '50%',
+            background: 'radial-gradient(circle at 35% 35%, #2a5aaa, #1a3a7a)',
+            boxShadow: '0 0 6px rgba(30,60,150,0.4)',
+          }} />
+        </div>
+
+        {/* Screen content */}
+        <div style={{
+          height: '100%',
+          display: 'flex', flexDirection: 'column',
+          paddingTop: 28,
+        }}>
+          {children}
+        </div>
+
+        {/* Home indicator */}
+        <div style={{
+          position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)',
+          width: 134, height: 5, borderRadius: 3,
+          background: 'rgba(255,255,255,0.15)',
+          zIndex: 200,
+        }} />
+      </motion.div>
+    </div>,
+    document.body
+  );
+}
 
 export default function App() {
   const { user, role } = useAuth();
@@ -72,8 +183,9 @@ export default function App() {
   // If opened via QR verification link, show passport directly (no auth needed for viewing)
   if (verifyPassportId) {
     return (
+      <PhoneFrame>
       <div style={{
-        maxWidth: 480, margin: '0 auto', minHeight: '100vh',
+        width: '100%', flex: 1,
         background: '#050D1A', padding: '60px 16px 40px',
         display: 'flex', flexDirection: 'column',
       }}>
@@ -110,30 +222,31 @@ export default function App() {
             borderRadius: 14, color: 'rgba(255,255,255,0.4)',
             fontSize: 13, cursor: 'pointer',
           }}
-        >
-          ← Войти в приложение
-        </motion.button>
-      </div>
-    );
-  }
+        >            ← Войти в приложение
+          </motion.button>
+        </div>
+      </PhoneFrame>
+      );
+    }
 
-  if (!user) return <LoginPage />;
-  if (!role) return <RegisterPage />;
+  if (!user) return <PhoneFrame><div style={{ flex: 1, height: '100%', overflow: 'hidden' }}><LoginPage /></div></PhoneFrame>;
+  if (!role) return <PhoneFrame><div style={{ flex: 1, height: '100%', overflow: 'hidden' }}><RegisterPage /></div></PhoneFrame>;
 
   return (
+    <PhoneFrame>
     <div style={{
-      maxWidth: 480, margin: '0 auto', minHeight: '100vh',
+      width: '100%', flex: 1,
       background: '#050D1A', fontFamily: "'Inter', system-ui, sans-serif",
       display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden'
     }}>
       {/* Фоновые градиентные пятна */}
       <div style={{
-        position: 'fixed', top: -100, left: -100, width: 300, height: 300,
+        position: 'absolute', top: -100, left: -100, width: 300, height: 300,
         background: 'radial-gradient(circle, rgba(0,212,170,0.08) 0%, transparent 70%)',
         pointerEvents: 'none', zIndex: 0
       }} />
       <div style={{
-        position: 'fixed', bottom: 100, right: -80, width: 250, height: 250,
+        position: 'absolute', bottom: 100, right: -80, width: 250, height: 250,
         background: 'radial-gradient(circle, rgba(0,120,255,0.07) 0%, transparent 70%)',
         pointerEvents: 'none', zIndex: 0
       }} />
@@ -177,7 +290,7 @@ export default function App() {
       </div>
 
       {/* Контент */}
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80, position: 'relative', zIndex: 1 }}>
+      <div style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -198,8 +311,7 @@ export default function App() {
 
       {/* Нижний навбар */}
       <div style={{
-        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: 480, zIndex: 100,
+        width: '100%', flexShrink: 0, zIndex: 100,
         background: 'rgba(5,13,26,0.92)', backdropFilter: 'blur(16px)',
         borderTop: '1px solid rgba(0,212,170,0.12)',
         display: 'flex', padding: '8px 8px 12px'
@@ -256,5 +368,6 @@ export default function App() {
         })}
       </div>
     </div>
+    </PhoneFrame>
   );
 }
