@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'fish-icon.png'],
       manifest: {
-        name: 'Smart Catch — Умный Улов',
-        short_name: 'SmartCatch',
+        name: 'CaspiNet — Умный Улов',
+        short_name: 'CaspiNet',
         description: 'Цифровой учёт улова для рыбаков Мангистауской области',
         theme_color: '#050D1A',
         background_color: '#050D1A',

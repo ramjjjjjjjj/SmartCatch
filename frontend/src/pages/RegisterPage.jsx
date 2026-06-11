@@ -4,6 +4,8 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "./firebase.js";
 import { useAuth } from './AuthContext.jsx';
 
+import CaspiNetLogo from '../components/CaspiNetLogo.jsx';
+
 const INPUT_STYLE = {
   width: '100%', padding: '10px 14px',
   background: 'rgba(255,255,255,0.05)',
@@ -105,11 +107,14 @@ export default function RegisterPage() {
       >
         <div style={{
           width: 40, height: 40, borderRadius: 12,
-          background: 'linear-gradient(135deg, #00D4AA, #0078FF)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
-        }}>🐟</div>
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(0,212,170,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <CaspiNetLogo size={24} />
+        </div>
         <div style={{ color: '#fff', fontSize: 20, fontWeight: 700, letterSpacing: '-0.3px' }}>
-          Smart Catch
+          CaspiNet
         </div>
       </motion.div>
 
@@ -212,7 +217,7 @@ export default function RegisterPage() {
           textAlign: 'center',
         }}
       >
-        Smart Catch v2.0 · Цифровой учёт улова
+        CaspiNet v2.0 · Цифровой учёт улова
       </motion.div>
     </div>
   );

@@ -5,6 +5,7 @@ const { initDB } = require('./db');
 const catchesRouter = require('./routes/catches');
 const quotasRouter = require('./routes/quotas');
 const ordersRouter = require('./routes/orders');
+const batchesRouter = require('./routes/batches');
 
 const app = express();
 const PORT = process.env.PORT;
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use('/api/catches', catchesRouter);
 app.use('/api/quotas', quotasRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/batches', batchesRouter);
 
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
 

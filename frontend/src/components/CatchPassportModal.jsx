@@ -434,7 +434,7 @@ export default function CatchPassportModal({ passportId, onClose, inline = false
               fontSize: 11, color: 'rgba(255,255,255,0.3)',
             }}
           >
-            ✓ Данные верифицированы системой Smart Catch
+            ✓ Данные верифицированы системой CaspiNet
             <br />
             Каспийский бассейн · Мангистауская область
           </motion.div>

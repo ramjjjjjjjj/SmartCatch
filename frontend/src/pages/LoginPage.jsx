@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { signInWithGoogle, auth, db } from "../firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
+import { FishIcon, FishFloatingIcon } from '../components/DuotoneIcons.jsx';
+import CaspiNetLogo from '../components/CaspiNetLogo.jsx';
 
 const INPUT_STYLE = {
   width: '100%', padding: '10px 14px',
@@ -14,11 +16,11 @@ const INPUT_STYLE = {
 };
 
 const floatingFish = [
-  { emoji: '🐟', x: '10%', y: '15%', delay: 0, duration: 6 },
-  { emoji: '🐠', x: '75%', y: '20%', delay: 1.2, duration: 7 },
-  { emoji: '🐡', x: '85%', y: '70%', delay: 0.6, duration: 5.5 },
-  { emoji: '🐟', x: '20%', y: '80%', delay: 2, duration: 6.5 },
-  { emoji: '🐠', x: '50%', y: '10%', delay: 0.3, duration: 8 },
+  { iconSize: 22, x: '10%', y: '15%', delay: 0, duration: 6 },
+  { iconSize: 18, x: '75%', y: '20%', delay: 1.2, duration: 7 },
+  { iconSize: 26, x: '85%', y: '70%', delay: 0.6, duration: 5.5 },
+  { iconSize: 20, x: '20%', y: '80%', delay: 2, duration: 6.5 },
+  { iconSize: 16, x: '50%', y: '10%', delay: 0.3, duration: 8 },
 ];
 
 export default function LoginPage() {
@@ -143,8 +145,8 @@ export default function LoginPage() {
         <motion.div
           key={i}
           style={{
-            position: 'absolute', left: f.x, top: f.y, fontSize: 20,
-            opacity: 0.15, pointerEvents: 'none',
+            position: 'absolute', left: f.x, top: f.y,
+            opacity: 0.2, pointerEvents: 'none',
           }}
           animate={{
             y: [0, -20, 0, 15, 0],
@@ -156,7 +158,7 @@ export default function LoginPage() {
             ease: 'easeInOut',
           }}
         >
-          {f.emoji}
+          <FishFloatingIcon size={f.iconSize} />
         </motion.div>
       ))}
 
@@ -168,15 +170,16 @@ export default function LoginPage() {
       >
         <div style={{
           width: 48, height: 48, borderRadius: 14,
-          background: 'linear-gradient(135deg, #00D4AA, #0078FF)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
-          boxShadow: '0 0 30px rgba(0,212,170,0.3)',
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(0,212,170,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 30px rgba(0,212,170,0.15)',
         }}>
-          🐟
+          <CaspiNetLogo size={32} />
         </div>
         <div>
           <div style={{ color: '#fff', fontSize: 24, fontWeight: 700, letterSpacing: '-0.5px' }}>
-            Smart Catch
+            CaspiNet
           </div>
           <div style={{ color: '#00D4AA', fontSize: 12, opacity: 0.7 }}>
             Мангистау · Digital Fleet
@@ -323,7 +326,7 @@ export default function LoginPage() {
           textAlign: 'center',
         }}
       >
-        Smart Catch v2.0 · Цифровой учёт улова
+        CaspiNet v2.0 · Цифровой учёт улова
       </motion.div>
     </div>
   );

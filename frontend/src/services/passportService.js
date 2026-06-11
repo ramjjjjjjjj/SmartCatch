@@ -176,7 +176,7 @@ export async function createPassport(catchData, quotaInfo = null) {
         event: 'passport_issued',
         label: '📄 Паспорт выдан',
         timestamp: now,
-        actor: 'Smart Catch System',
+        actor: 'CaspiNet System',
         details: `Паспорт №${passportId} · Ожидает инспектора`,
       },
     ],

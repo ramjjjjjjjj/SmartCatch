@@ -20,7 +20,7 @@ export default function PassportQRCode({ passportId, size = 200, compact = false
     if (navigator.share) {
       navigator.share({
         title: `Паспорт улова ${passportId}`,
-        text: `Цифровой паспорт улова Smart Catch: ${passportId}`,
+        text: `Цифровой паспорт улова CaspiNet: ${passportId}`,
         url: verificationUrl,
       });
     } else {

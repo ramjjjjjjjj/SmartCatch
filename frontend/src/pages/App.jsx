@@ -4,6 +4,11 @@ import { createPortal } from 'react-dom';
 
 const DESKTOP_BREAKPOINT = 640;
 import { useAuth } from './AuthContext.jsx';
+import {
+  FishIcon, HookIcon, ShopIcon, MapIcon,
+  RestaurantIcon, BrainIcon, ProfileIcon,
+} from '../components/DuotoneIcons.jsx';
+import CaspiNetLogo from '../components/CaspiNetLogo.jsx';
 import LoginPage from './LoginPage';
 import RegisterPage from './RegisterPage';
 import FisherView from '../components/FisherView';
@@ -17,12 +22,12 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase.js';
 
 const TABS = [
-  { id: 'fisher',     icon: '🎣', label: 'Улов' },
-  { id: 'market',     icon: '🏪', label: 'Рынок' },
-  { id: 'inspector',  icon: '📊', label: 'Карта' },
-  { id: 'restaurant', icon: '🍽️', label: 'Меню' },
-  { id: 'ai',         icon: '🤖', label: 'AI' },
-  { id: 'profile',    icon: '👤', label: 'Профиль' },
+  { id: 'fisher',     icon: HookIcon,       label: 'Улов' },
+  { id: 'market',     icon: ShopIcon,       label: 'Рынок' },
+  { id: 'inspector',  icon: MapIcon,        label: 'Карта' },
+  { id: 'restaurant', icon: RestaurantIcon, label: 'Меню' },
+  { id: 'ai',         icon: BrainIcon,      label: 'AI' },
+  { id: 'profile',    icon: ProfileIcon,    label: 'Профиль' },
 ];
 
 const pageVariants = {
@@ -33,11 +38,18 @@ const pageVariants = {
 
 function PhoneFrame({ children }) {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > DESKTOP_BREAKPOINT);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth > DESKTOP_BREAKPOINT);
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // Live clock in status bar
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
+    return () => clearInterval(timer);
   }, []);
 
   if (!isDesktop) return <>{children}</>;
@@ -46,7 +58,7 @@ function PhoneFrame({ children }) {
     <div style={{
       display: 'flex', justifyContent: 'center', alignItems: 'center',
       minHeight: '100vh',
-      background: 'radial-gradient(ellipse at 50% 40%, #f0f4f8 0%, #e2e8f0 50%, #d6e0ed 100%)',
+      background: 'radial-gradient(ellipse at 50% 40%, #ffffff 0%, #f5f7fa 40%, #e8ecf2 100%)',
       padding: 20,
       position: 'fixed', inset: 0, zIndex: 9999,
       overflow: 'hidden',
@@ -74,9 +86,12 @@ function PhoneFrame({ children }) {
           borderRadius: 54,
           border: '1px solid rgba(0,0,0,0.08)',
           boxShadow: `
-            0 0 0 1px rgba(0,0,0,0.05),
-            0 30px 80px rgba(0,0,0,0.25),
-            0 0 40px rgba(0,0,0,0.05)
+            0 0 0 1px rgba(0,0,0,0.10),
+            0 4px 8px rgba(0,0,0,0.12),
+            0 12px 28px rgba(0,0,0,0.18),
+            0 30px 70px rgba(0,0,0,0.25),
+            0 55px 120px rgba(0,0,0,0.15),
+            0 0 100px rgba(0,212,170,0.06)
           `,
           overflow: 'hidden',
         }}
@@ -85,27 +100,91 @@ function PhoneFrame({ children }) {
         <div style={{
           position: 'absolute', right: -3, top: 140, width: 3, height: 55,
           background: 'rgba(255,255,255,0.12)',
-          borderRadius: '0 2px 2px 0', zIndex: 300,
+          borderRadius: '0 2px 2px 0', zIndex: 400,
         }} />
         <div style={{
           position: 'absolute', right: -3, top: 210, width: 3, height: 38,
           background: 'rgba(255,255,255,0.12)',
-          borderRadius: '0 2px 2px 0', zIndex: 300,
+          borderRadius: '0 2px 2px 0', zIndex: 400,
         }} />
         <div style={{
           position: 'absolute', left: -3, top: 175, width: 3, height: 45,
           background: 'rgba(255,255,255,0.08)',
-          borderRadius: '2px 0 0 2px', zIndex: 300,
+          borderRadius: '2px 0 0 2px', zIndex: 400,
         }} />
+
+        {/* iPhone Status Bar */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0,
+          height: 54,
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 28px',
+          zIndex: 250,
+        }}>
+          {/* Time */}
+          <span style={{
+            fontSize: 15, fontWeight: 700,
+            color: '#fff', letterSpacing: '0.3px',
+            fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif",
+          }}>
+            {currentTime.toLocaleTimeString('en-US', {
+              hour: 'numeric', minute: '2-digit',
+              hour12: false,
+            }).replace(/^0/, '')}
+          </span>
+
+          {/* Status Right: Signal, WiFi, Battery */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {/* Signal bars */}
+            <svg width="17" height="12" viewBox="0 0 17 12" fill="none" aria-hidden="true">
+              <rect x="0" y="8" width="3" height="4" rx="0.5" fill="#fff" opacity="0.2"/>
+              <rect x="5" y="5" width="3" height="7" rx="0.5" fill="#fff" opacity="0.2"/>
+              <rect x="10" y="2.5" width="3" height="9.5" rx="0.5" fill="#fff" opacity="0.2"/>
+              <rect x="14" y="0" width="3" height="12" rx="0.5" fill="#fff"/>
+            </svg>
+
+            {/* WiFi icon */}
+            <svg width="14" height="12" viewBox="0 0 14 12" fill="none" aria-hidden="true">
+              <path d="M7 8.5c-1 0-1.8.4-2.5 1" stroke="#fff" strokeWidth="1.3" strokeLinecap="round" opacity="0.4"/>
+              <path d="M4.5 6.5C5.8 5.5 6.4 5 7 5s1.2.5 2.5 1.5" stroke="#fff" strokeWidth="1.3" strokeLinecap="round" opacity="0.4"/>
+              <path d="M7 11h.01" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+
+            {/* Battery */}
+            <div style={{
+              position: 'relative',
+              width: 25, height: 12,
+              border: '1px solid rgba(255,255,255,0.35)',
+              borderRadius: 3,
+              display: 'flex', alignItems: 'center',
+              padding: 1,
+            }} aria-hidden="true">
+              <div style={{
+                width: '92%', height: '100%',
+                background: 'rgba(255,255,255,0.9)',
+                borderRadius: 1.5,
+              }} />
+              {/* Battery tip */}
+              <div style={{
+                position: 'absolute', right: -4, top: '50%',
+                transform: 'translateY(-50%)',
+                width: 2, height: 4,
+                background: 'rgba(255,255,255,0.35)',
+                borderRadius: '0 1px 1px 0',
+              }} />
+            </div>
+          </div>
+        </div>
 
         {/* Dynamic Island */}
         <div style={{
-          position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
-          width: 118, height: 34,
+          position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+          width: 120, height: 33,
           background: '#000',
           borderRadius: 20,
-          zIndex: 200,
-          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
+          zIndex: 260,
+          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06), 0 4px 12px rgba(0,0,0,0.3)',
           display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
           paddingRight: 14,
         }}>
@@ -121,7 +200,7 @@ function PhoneFrame({ children }) {
         <div style={{
           height: '100%',
           display: 'flex', flexDirection: 'column',
-          paddingTop: 28,
+          paddingTop: 54,
         }}>
           {children}
         </div>
@@ -192,13 +271,14 @@ export default function App() {
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <div style={{
             width: 48, height: 48, borderRadius: 14,
-            background: 'linear-gradient(135deg, #00D4AA, #0078FF)',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(0,212,170,0.2)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 24, marginBottom: 8,
+            marginBottom: 8,
           }}>
-            🐟
+            <CaspiNetLogo size={28} />
           </div>
-          <div style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>Smart Catch</div>
+          <div style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>CaspiNet</div>
           <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginTop: 2 }}>
             Верификация цифрового паспорта улова
           </div>
@@ -261,11 +341,12 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 36, height: 36, borderRadius: 10,
-            background: 'linear-gradient(135deg, #00D4AA, #0078FF)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18
-          }}>🐟</div>
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(0,212,170,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}><CaspiNetLogo size={22} /></div>
           <div>
-            <div style={{ color: '#fff', fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>Smart Catch</div>
+            <div style={{ color: '#fff', fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px' }}>CaspiNet</div>
             <div style={{ color: '#00D4AA', fontSize: 10, opacity: 0.8 }}>Мангистау · Digital Fleet</div>
           </div>
         </div>
@@ -341,8 +422,8 @@ export default function App() {
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}
-              <span style={{ fontSize: 20, position: 'relative', zIndex: 1 }}>
-                {tab.icon}
+              <span style={{ fontSize: 20, position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {typeof tab.icon === 'string' ? tab.icon : <tab.icon size={20} />}
                 {tab.id === 'ai' && alertCount > 0 && (
                   <span style={{
                     position: 'absolute', top: -4, right: -8,
