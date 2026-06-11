@@ -19,6 +19,7 @@ import ProfileView from '../components/ProfileView';
 import FisheryLimitsDashboard from '../components/FisheryLimitsDashboard.jsx';
 import CatchPassportModal from '../components/CatchPassportModal';
 import { collection, onSnapshot } from 'firebase/firestore';
+import PassportQRCode from '../components/PassportQRCode';
 import { db } from './firebase.js';
 
 const TABS = [
@@ -27,7 +28,9 @@ const TABS = [
   { id: 'inspector',  icon: MapIcon,        label: 'Карта' },
   { id: 'restaurant', icon: RestaurantIcon, label: 'Меню' },
   { id: 'ai',         icon: BrainIcon,      label: 'AI' },
+  { id: 'passport', icon: '🐟', label: 'Паспорт' },
   { id: 'profile',    icon: ProfileIcon,    label: 'Профиль' },
+  
 ];
 
 const pageVariants = {
@@ -385,6 +388,7 @@ export default function App() {
             {activeTab === 'inspector'  && <InspectorView />}
             {activeTab === 'restaurant' && <RestaurantView />}
             {activeTab === 'ai'         && <FisheryLimitsDashboard />}
+            {activeTab === 'passport' && <PassportQRCode />}
             {activeTab === 'profile'    && <ProfileView />}
           </motion.div>
         </AnimatePresence>
