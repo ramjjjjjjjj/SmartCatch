@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { QrCode } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 
@@ -22,16 +23,25 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import PassportQRCode from '../components/PassportQRCode';
 import { db } from './firebase.js';
 
-const TABS = [
-  { id: 'fisher',     icon: HookIcon,       label: 'Улов' },
-  { id: 'market',     icon: ShopIcon,       label: 'Рынок' },
-  { id: 'inspector',  icon: MapIcon,        label: 'Карта' },
-  { id: 'restaurant', icon: RestaurantIcon, label: 'Меню' },
-  { id: 'ai',         icon: BrainIcon,      label: 'AI' },
-  { id: 'passport', icon: '🐟', label: 'Паспорт' },
-  { id: 'profile',    icon: ProfileIcon,    label: 'Профиль' },
-  
-];
+const TABS_BY_ROLE = {
+  fisher: [
+    { id: 'fisher',   icon: HookIcon,    label: 'Улов' },
+    { id: 'passport', icon: QrCode,      label: 'Паспорт' },
+    { id: 'profile',  icon: ProfileIcon, label: 'Профиль' },
+  ],
+  restaurant: [
+    { id: 'market',     icon: ShopIcon,       label: 'Рынок' },
+    { id: 'restaurant', icon: RestaurantIcon, label: 'Меню' },
+    { id: 'passport',   icon: QrCode,         label: 'Проверить' },
+    { id: 'profile',    icon: ProfileIcon,    label: 'Профиль' },
+  ],
+  inspector: [
+    { id: 'inspector', icon: MapIcon,      label: 'Карта' },
+    { id: 'passport',  icon: QrCode,       label: 'Паспорта' },
+    { id: 'ai',        icon: BrainIcon,    label: 'AI' },
+    { id: 'profile',   icon: ProfileIcon,  label: 'Профиль' },
+  ],
+};
 
 const pageVariants = {
   initial: { opacity: 0, y: 16 },
@@ -223,6 +233,7 @@ function PhoneFrame({ children }) {
 
 export default function App() {
   const { user, role } = useAuth();
+  const TABS = TABS_BY_ROLE[role] || TABS_BY_ROLE.fisher;
   const [activeTab, setActiveTab] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [alertCount, setAlertCount] = useState(0);

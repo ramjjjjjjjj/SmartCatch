@@ -42,6 +42,19 @@ router.post('/sign', async (req, res) => {
   }
 });
 
+// ✅ MUST be before /:batch_code
+router.get('/fisher/:fisher_id', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT * FROM batches WHERE fisher_id=$1 ORDER BY caught_at DESC`,
+      [req.params.fisher_id]
+    );
+    res.json(result.rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Get full chain for a batch
 router.get('/:batch_code', async (req, res) => {
   const { batch_code } = req.params;
