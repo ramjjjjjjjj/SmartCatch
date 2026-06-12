@@ -23,12 +23,12 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import PassportQRCode from '../components/PassportQRCode';
 import LicenseView from '../components/LicenseView';
 import { db } from './firebase.js';
-
 const TABS_BY_ROLE = {
-  fisher: [
+fisher: [
     { id: 'fisher',   icon: HookIcon,    label: 'Улов' },
+    { id: 'market',   icon: ShopIcon,    label: 'Рынок' },
     { id: 'passport', icon: '🪪',      label: 'Паспорт' },
-    { id: 'license', icon: '🛡️', label: 'Лицензия' },
+    { id: 'license',  icon: '🛡️',     label: 'Лицензия' },
     { id: 'profile',  icon: ProfileIcon, label: 'Профиль' },
   ],
   restaurant: [
