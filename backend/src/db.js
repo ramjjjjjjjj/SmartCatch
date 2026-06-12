@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: { rejectUnauthorized: false },
 });
 
 async function initDB() {
@@ -32,6 +32,7 @@ async function initDB() {
       ('Сазан', 3200, 8000),
       ('Вобла', 12400, 20000)
     ON CONFLICT (fish_type) DO NOTHING;
+
     CREATE TABLE IF NOT EXISTS orders (
       id SERIAL PRIMARY KEY,
       catch_id INTEGER REFERENCES catches(id),

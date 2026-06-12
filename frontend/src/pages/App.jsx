@@ -21,23 +21,25 @@ import FisheryLimitsDashboard from '../components/FisheryLimitsDashboard.jsx';
 import CatchPassportModal from '../components/CatchPassportModal';
 import { collection, onSnapshot } from 'firebase/firestore';
 import PassportQRCode from '../components/PassportQRCode';
+import LicenseView from '../components/LicenseView';
 import { db } from './firebase.js';
 
 const TABS_BY_ROLE = {
   fisher: [
     { id: 'fisher',   icon: HookIcon,    label: 'Улов' },
-    { id: 'passport', icon: QrCode,      label: 'Паспорт' },
+    { id: 'passport', icon: '🪪',      label: 'Паспорт' },
+    { id: 'license', icon: '🛡️', label: 'Лицензия' },
     { id: 'profile',  icon: ProfileIcon, label: 'Профиль' },
   ],
   restaurant: [
     { id: 'market',     icon: ShopIcon,       label: 'Рынок' },
     { id: 'restaurant', icon: RestaurantIcon, label: 'Меню' },
-    { id: 'passport',   icon: QrCode,         label: 'Проверить' },
+    { id: 'passport',   icon: '🪪',         label: 'Проверить' },
     { id: 'profile',    icon: ProfileIcon,    label: 'Профиль' },
   ],
   inspector: [
     { id: 'inspector', icon: MapIcon,      label: 'Карта' },
-    { id: 'passport',  icon: QrCode,       label: 'Паспорта' },
+    { id: 'passport',  icon: '🪪',       label: 'Паспорта' },
     { id: 'ai',        icon: BrainIcon,    label: 'AI' },
     { id: 'profile',   icon: ProfileIcon,  label: 'Профиль' },
   ],
@@ -401,6 +403,7 @@ export default function App() {
             {activeTab === 'ai'         && <FisheryLimitsDashboard />}
             {activeTab === 'passport' && <PassportQRCode />}
             {activeTab === 'profile'    && <ProfileView />}
+            {activeTab === 'license' && <LicenseView />}
           </motion.div>
         </AnimatePresence>
       </div>
