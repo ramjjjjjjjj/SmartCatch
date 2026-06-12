@@ -8,7 +8,7 @@ const ordersRouter = require('./routes/orders');
 const batchesRouter = require('./routes/batches');
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
@@ -20,5 +20,5 @@ app.use('/api/batches', batchesRouter);
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
 
 initDB().then(() => {
-  app.listen(PORT, () => console.log(`🐟 Smart Catch API running on port ${PORT}`));
+  app.listen(PORT, '0.0.0.0', () => console.log(`Smart Catch API running on port ${PORT}`));
 });
